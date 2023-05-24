@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: environments
+  namespace: default
+  labels:
+    app: environments
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: environments
+  template:
+    metadata:
+      labels:
+        app: environments
+    spec:
+      imagePullSecrets:
+      - name: index-docker-io-v1
+      containers:
+      - name: environments
+        image: loginvsi/environments:4.8.21
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: postgres-password
+              name: database-credentials
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: DB__ConnectionString
+          value: Server=environmentsdb;Database=environments;Username=postgres;Maximum Pool Size=200;
+        - name: DB__DbType
+          value: PostgreSQL
+        - name: Hosting__HostUrls
+          value: ""
+        - name: Hosting__VirtualDirectory
+          value: environments
+        - name: IdentityProvider__Authority
+          value: http://identityserver:5000/identityserver
+        - name: Logging__Console__Enabled
+          value: "true"
+        - name: Logging__File__Enabled
+          value: "true"
+        - name: Logging__MinimumLevel
+          value: Information
+        - name: Logging__Seq__Enabled
+          value: "false"
+        - name: MessageBroker__Hostname
+          value: messagebroker
