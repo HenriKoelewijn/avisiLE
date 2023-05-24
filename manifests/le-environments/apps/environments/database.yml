@@ -20,6 +20,8 @@ spec:
         auth:
           database: environmentsdb
           existingSecret: database-credentials
+    image:
+      tag: 13.11.0-debian-11-r4
     postgresqlSharedPreloadLibraries: 'pg_stat_statements'
     primary:
       initdb:
@@ -34,7 +36,7 @@ spec:
         log_min_duration_statement = '3000'
       resources:
         limits:
-          cpu: 2000m
+          cpu: 2000m 
           memory: 1Gi
         requests:
           cpu: 200m
