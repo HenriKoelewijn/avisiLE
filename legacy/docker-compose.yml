@@ -1,0 +1,1358 @@
+networks:
+  databases:
+    driver: overlay
+  front:
+    driver: overlay
+  logging:
+    driver: overlay
+  messaging:
+    driver: overlay
+secrets:
+  ADMIN_PASSWORD:
+    external: true
+  ADMIN_USERNAME:
+    external: true
+  DB__ConnectionString:
+    external: true
+  ENCRYPTION_SECRET:
+    external: true
+  ENGINE_SECRET:
+    external: true
+  EVENTLOGGER_SECRET:
+    external: true
+  LAUNCHER_SECRET:
+    external: true
+  PUBLICAPI_SECRET:
+    external: true
+  SERVICE_SECRET:
+    external: true
+  USER_PASSWORD:
+    external: true
+  VSI_SSL_CERTIFICATE:
+    file: ${SSL_CERTIFICATE_PATH}
+  VSI_SSL_CERTIFICATE_KEY:
+    file: ${SSL_CERTIFICATE_KEY_PATH}
+  VSI_SSL_CERTIFICATE_KEY_PASSWORD:
+    external: true
+  WORKER_SECRET:
+    external: true
+services:
+  contentdelivery:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=contentdeliveryDb;Database=contentDelivery;Username=postgres;Maximum
+        Pool Size=200;
+      DB__DbType: PostgreSQL
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: contentDelivery
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      MigrationSourceDatabases__contentdeliveryDb: Server=contentdeliveryDb;Database=contentDelivery;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__environmentsDb: Server=environmentsDb;Database=environments;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportsDb: Server=reportsDb;Database=reports;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportschedulesDb: Server=reportschedulesDb;Database=reportSchedules;Username=postgres;Maximum
+        Pool Size=200;
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Version__Number: '5.1.2'
+    image: loginvsi/contentdelivery:3.1.110
+    networks:
+    - front
+    - messaging
+    - databases
+    - logging
+    restart: always
+    secrets:
+    - LAUNCHER_SECRET
+    - ENGINE_SECRET
+    - EVENTLOGGER_SECRET
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    - WORKER_SECRET
+    stop_grace_period: 30s
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/content:/loginvsi/wwwroot/content
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  contentdeliveryDb:
+    command: postgres -c 'max_connections=500'
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/contentdeliveryDb:/var/lib/postgresql/data
+  environments:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=environmentsDb;Database=environments;Username=postgres;Maximum
+        Pool Size=200;
+      DB__DbType: PostgreSQL
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: environments
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      MigrationSourceDatabases__contentdeliveryDb: Server=contentdeliveryDb;Database=contentDelivery;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__environmentsDb: Server=environmentsDb;Database=environments;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportsDb: Server=reportsDb;Database=reports;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportschedulesDb: Server=reportschedulesDb;Database=reportSchedules;Username=postgres;Maximum
+        Pool Size=200;
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Version__Number: '5.1.2'
+    image: loginvsi/environments:4.8.21
+    networks:
+    - front
+    - messaging
+    - databases
+    - logging
+    restart: always
+    secrets:
+    - LAUNCHER_SECRET
+    - ENGINE_SECRET
+    - EVENTLOGGER_SECRET
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    - WORKER_SECRET
+    stop_grace_period: 30s
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/content:/loginvsi/wwwroot/content
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  environmentsDb:
+    command: postgres -c 'max_connections=500'
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/environmentsDb:/var/lib/postgresql/data
+  eventnotificationsworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: eventNotificationsWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/eventnotificationsworker:3.1.55
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  eventshub:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: eventsHub
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/eventshub:3.1.32
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  functionaleventsworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: functionalEventsWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/functionaleventsworker:3.1.52
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  grafana:
+    depends_on:
+    - identityserver
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - IdentityProvider__Authority=http://identityserver:5000/identityserver
+    - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/ADMIN_PASSWORD
+    - GF_SECURITY_ALLOW_EMBEDDING=true
+    - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
+    - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    - GF_AUTH_ANONYMOUS_ENABLED=true
+    - LE_ENVIRONMENTS_PASSWORD=${ENVIRONMENTS_PASSWORD}
+    - LE_LOADTESTS_PASSWORD=${LOADTESTS_PASSWORD}
+    - LE_LOGINENTERPRISE_PASSWORD=${LOGINENTERPRISE_PASSWORD}
+    - LE_RAWDATAEXPORTS_PASSWORD=${RAWDATAEXPORTS_PASSWORD}
+    - LE_REPORTS_PASSWORD=${REPORTS_PASSWORD}
+    - LE_SESSIONMETRICSTATISTICS_PASSWORD=${SESSIONMETRICSTATISTICS_PASSWORD}
+    - LE_STATISTICS_PASSWORD=${STATISTICS_PASSWORD}
+    - GF_USERS_DEFAULT_THEME=light
+    image: loginvsi/grafana:7.5.17.4-le
+    networks:
+    - front
+    - databases
+    - messaging
+    restart: always
+    secrets:
+    - ADMIN_PASSWORD
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/data/grafana/var/lib:/var/lib/grafana
+    - ${PI_ROOT}/data/grafana/provisioning:/etc/grafana/provisioning
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  identityserver:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=identityserverDb;Database=identityServer;Username=postgres;
+      DB__DbType: PostgreSQL
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: identityserver
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      Version__Number: '5.1.2'
+    image: loginvsi/identityserver:3.1.51
+    networks:
+    - front
+    - databases
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - ADMIN_PASSWORD
+    - ADMIN_USERNAME
+    - USER_PASSWORD
+    - LAUNCHER_SECRET
+    - ENGINE_SECRET
+    - EVENTLOGGER_SECRET
+    - PUBLICAPI_SECRET
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  identityserverDb:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/identityserverDb:/var/lib/postgresql/data
+  ingress:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      APPLIANCE_GUARD_URL: ${APPLIANCE_GUARD_URL}
+      GATEWAY_PORT: ${GATEWAY_PORT}
+    image: loginvsi/ingress:3.1.32
+    networks:
+    - front
+    ports:
+    - ${GATEWAY_PORT}:2443
+    - 80:2080
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - source: VSI_SSL_CERTIFICATE
+      target: vsi_ssl_cert
+    - source: VSI_SSL_CERTIFICATE_KEY
+      target: vsi_ssl_cert.key
+    - source: VSI_SSL_CERTIFICATE_KEY_PASSWORD
+      target: vsi_ssl_cert.key.pw
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+  licensingDb:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/licensingDb:/var/lib/postgresql/data
+  loadtests:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=loadtestsDb;Database=loadTests;Username=postgres;Maximum
+        Pool Size=200;
+      DB__DbType: PostgreSQL
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: loadTests
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      MigrationSourceDatabases__contentdeliveryDb: Server=contentdeliveryDb;Database=contentDelivery;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__environmentsDb: Server=environmentsDb;Database=environments;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportsDb: Server=reportsDb;Database=reports;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportschedulesDb: Server=reportschedulesDb;Database=reportSchedules;Username=postgres;Maximum
+        Pool Size=200;
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Version__Number: '5.1.2'
+    image: loginvsi/loadtests:3.1.28
+    networks:
+    - front
+    - messaging
+    - databases
+    - logging
+    restart: always
+    secrets:
+    - LAUNCHER_SECRET
+    - ENGINE_SECRET
+    - EVENTLOGGER_SECRET
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    - WORKER_SECRET
+    stop_grace_period: 30s
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/content:/loginvsi/wwwroot/content
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  loadtestsDb:
+    command: postgres -c 'max_connections=500'
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/loadtestsDb:/var/lib/postgresql/data
+  loginenterprise:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=loginenterpriseDb;Database=loginEnterprise;Username=postgres;Maximum
+        Pool Size=200;
+      DB__DbType: PostgreSQL
+      FTP_PROXY: ${proxy_url}
+      HTTP_PROXY: ${proxy_url}
+      HTTPS_PROXY: ${proxy_url}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: loginEnterprise
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      MigrationSourceDatabases__contentdeliveryDb: Server=contentdeliveryDb;Database=contentDelivery;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__environmentsDb: Server=environmentsDb;Database=environments;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportsDb: Server=reportsDb;Database=reports;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportschedulesDb: Server=reportschedulesDb;Database=reportSchedules;Username=postgres;Maximum
+        Pool Size=200;
+      NO_PROXY: ${proxy_exclusions}
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Version__Number: '5.1.2'
+      ftp_proxy: ${proxy_url}
+      http_proxy: ${proxy_url}
+      https_proxy: ${proxy_url}
+      no_proxy: ${proxy_exclusions}
+    image: loginvsi/loginenterprise:4.8.33
+    networks:
+    - front
+    - messaging
+    - databases
+    - logging
+    restart: always
+    secrets:
+    - LAUNCHER_SECRET
+    - ENGINE_SECRET
+    - EVENTLOGGER_SECRET
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    - WORKER_SECRET
+    stop_grace_period: 30s
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/content:/loginvsi/wwwroot/content
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  loginenterpriseDb:
+    command: postgres -c 'max_connections=500'
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/loginenterpriseDb:/var/lib/postgresql/data
+  loginscheduleworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: loginScheduleWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/loginscheduleworker:3.1.64
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  messagebroker:
+    deploy:
+      restart_policy:
+        condition: any
+    hostname: rabbitMQ-${COMPOSE_PROJECT_NAME}
+    image: loginvsi/rabbitmq:3.8.2-le
+    networks:
+    - messaging
+    restart: always
+    volumes:
+    - ${DB_ROOT}/messagebroker:/var/lib/rabbitmq/mnesia
+    - ${PI_ROOT}/settings:/loginvsi/settings
+  portainer:
+    command: -d /data -H unix:///var/run/docker.sock --admin-password-file /run/secrets/ADMIN_PASSWORD
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: any
+    image: loginvsi/portainer:1.23.1
+    networks:
+    - front
+    secrets:
+    - ADMIN_PASSWORD
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - /var/run/docker.sock:/var/run/docker.sock
+  publicapi:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      ApiAuthentication__Authority: http://identityserver:5000/identityserver
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: publicApi
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 10
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+    image: loginvsi/publicapi:3.1.65
+    networks:
+    - logging
+    - front
+    - messaging
+    restart: always
+    secrets:
+    - PUBLICAPI_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  rawdataexports:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=rawdataexportsDb;Database=rawDataExports;Username=postgres;Maximum
+        Pool Size=200;
+      DB__DbType: PostgreSQL
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: rawDataExports
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      MigrationSourceDatabases__contentdeliveryDb: Server=contentdeliveryDb;Database=contentDelivery;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__environmentsDb: Server=environmentsDb;Database=environments;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportsDb: Server=reportsDb;Database=reports;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportschedulesDb: Server=reportschedulesDb;Database=reportSchedules;Username=postgres;Maximum
+        Pool Size=200;
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Version__Number: '5.1.2'
+    image: loginvsi/rawdataexports:3.1.31
+    networks:
+    - front
+    - messaging
+    - databases
+    - logging
+    restart: always
+    secrets:
+    - LAUNCHER_SECRET
+    - ENGINE_SECRET
+    - EVENTLOGGER_SECRET
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    - WORKER_SECRET
+    stop_grace_period: 30s
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/content:/loginvsi/wwwroot/content
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  rawdataexportsDb:
+    command: postgres -c 'max_connections=500'
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/rawdataexportsDb:/var/lib/postgresql/data
+  rawdataexportsworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: rawDataExportsWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/rawdataexportsworker:3.1.39
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  reports:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=reportsDb;Database=reports;Username=postgres;Maximum
+        Pool Size=200;
+      DB__DbType: PostgreSQL
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: reports
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      MigrationSourceDatabases__contentdeliveryDb: Server=contentdeliveryDb;Database=contentDelivery;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__environmentsDb: Server=environmentsDb;Database=environments;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportsDb: Server=reportsDb;Database=reports;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportschedulesDb: Server=reportschedulesDb;Database=reportSchedules;Username=postgres;Maximum
+        Pool Size=200;
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Version__Number: '5.1.2'
+    image: loginvsi/reports:3.1.49
+    networks:
+    - front
+    - messaging
+    - databases
+    - logging
+    restart: always
+    secrets:
+    - LAUNCHER_SECRET
+    - ENGINE_SECRET
+    - EVENTLOGGER_SECRET
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    - WORKER_SECRET
+    stop_grace_period: 30s
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/content:/loginvsi/wwwroot/content
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  reportsDb:
+    command: postgres -c 'max_connections=500'
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/reportsDb:/var/lib/postgresql/data
+  reportschedulesDb:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/reportschedulesDb:/var/lib/postgresql/data
+  reportsworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: reportsWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/reportsworker:3.1.43
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  sessionmetricstatistics:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=sessionmetricstatisticsDb;Database=sessionMetricStatistics;Username=postgres;Maximum
+        Pool Size=200;
+      DB__DbType: PostgreSQL
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: sessionMetricStatistics
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      MigrationSourceDatabases__contentdeliveryDb: Server=contentdeliveryDb;Database=contentDelivery;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__environmentsDb: Server=environmentsDb;Database=environments;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportsDb: Server=reportsDb;Database=reports;Username=postgres;Maximum
+        Pool Size=200;
+      MigrationSourceDatabases__reportschedulesDb: Server=reportschedulesDb;Database=reportSchedules;Username=postgres;Maximum
+        Pool Size=200;
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Version__Number: '5.1.2'
+    image: loginvsi/sessionmetricstatistics:3.1.32
+    networks:
+    - front
+    - messaging
+    - databases
+    - logging
+    restart: always
+    secrets:
+    - LAUNCHER_SECRET
+    - ENGINE_SECRET
+    - EVENTLOGGER_SECRET
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    - WORKER_SECRET
+    stop_grace_period: 30s
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/content:/loginvsi/wwwroot/content
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  sessionmetricstatisticsDb:
+    command: postgres -c 'max_connections=500'
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/sessionmetricstatisticsDb:/var/lib/postgresql/data
+  sessionworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: sessionWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/sessionworker:3.1.55
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  statisticsDb:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/statisticsDb:/var/lib/postgresql/data
+  statisticworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: statisticWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/statisticworker:3.1.42
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  synchronizationworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: synchronizationWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/synchronizationworker:3.1.29
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  systemconfiguration:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      DB__ConnectionString: Server=systemconfigurationDb;Database=systemConfiguration;Username=postgres;
+      DB__DbType: PostgreSQL
+      DatabaseConfiguration__SettingsFilePath: /loginvsi/settings/database-config.json
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: systemConfiguration
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      MigrationSourceDatabases__licensingDb: Server=licensingDb;Database=licensing;Username=postgres;Maximum
+        Pool Size=200;
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Version__Number: '5.1.2'
+    image: loginvsi/systemconfiguration:4.8.19
+    networks:
+    - front
+    - messaging
+    - databases
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - ENCRYPTION_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+    - /etc/ssl/certs:/etc/ssl/certs:ro
+    - /usr/local/share/ca-certificates:/usr/local/share/ca-certificates:ro
+  systemconfigurationDb:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/systemconfigurationDb:/var/lib/postgresql/data
+  systemworker:
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: systemWorker
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      PdfGenerator__PathToWkHtmlToPdf: wkhtmltopdf
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 30
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__statisticWorkerUrl: http://statisticworker:5000/statisticWorker
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+      Services__technicalEventsUrl: http://technicalevents:5000/technicalEvents
+    image: loginvsi/systemworker:3.1.27
+    networks:
+    - front
+    - messaging
+    - logging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  technicalevents:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      DB__ConnectionString: Server=technicaleventsDb;Database=technicalEvents;Username=postgres;
+      DB__DbType: PostgreSQL
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: technicalEvents
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 50
+      Retry__RetryDelay: 10
+      Version__Number: '5.1.2'
+    image: loginvsi/technicalevents:3.1.27
+    networks:
+    - front
+    - messaging
+    - logging
+    - databases
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+  technicaleventsDb:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+    - POSTGRES_HOST_AUTH_METHOD=trust
+    image: loginvsi/postgres:13.3-le
+    networks:
+    - databases
+    restart: always
+    stop_grace_period: 2m30s
+    stop_signal: SIGINT
+    volumes:
+    - ${DB_ROOT}/technicaleventsDb:/var/lib/postgresql/data
+  ui:
+    deploy:
+      restart_policy:
+        condition: any
+    image: loginvsi/ui_loginpi:3.1.218
+    networks:
+    - front
+    restart: always
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+  userinterfaceapi:
+    deploy:
+      restart_policy:
+        condition: any
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENV}
+      Hosting__HostUrls: ${ALLOWED_CLIENT_URLS}
+      Hosting__VirtualDirectory: userInterfaceApi
+      IdentityProvider__Authority: http://identityserver:5000/identityserver
+      Logging__Console__Enabled: "true"
+      Logging__File__Enabled: "true"
+      Logging__MinimumLevel: ${MINIMUM_LOGLEVEL}
+      Logging__Seq__Enabled: ${ENABLE_SEQ}
+      MessageBroker__Hostname: messagebroker
+      OpenIdConnectClient__Authority: http://identityserver:5000/identityserver
+      Retry__ConnectDelay: 10
+      Retry__MaxAttempts: 10
+      Retry__RetryDelay: 10
+      Services__contentDeliveryUrl: http://contentdelivery:5000/contentDelivery
+      Services__environmentsUrl: http://environments:5000/environments
+      Services__loadTestsUrl: http://loadtests:5000/loadTests
+      Services__loginEnterpriseUrl: http://loginenterprise:5000/loginEnterprise
+      Services__rawDataExportsUrl: http://rawdataexports:5000/rawDataExports
+      Services__reportsUrl: http://reports:5000/reports
+      Services__sessionMetricStatisticsUrl: http://sessionmetricstatistics:5000/sessionMetricStatistics
+      Services__systemConfigurationUrl: http://systemconfiguration:5000/systemConfiguration
+    image: loginvsi/userinterfaceapi:3.1.47
+    networks:
+    - logging
+    - front
+    - messaging
+    restart: always
+    secrets:
+    - SERVICE_SECRET
+    - WORKER_SECRET
+    volumes:
+    - ${PI_ROOT}/settings:/loginvsi/settings
+    - ${PI_ROOT}/logs:/loginvsi/logs
+version: "3.6"
+
